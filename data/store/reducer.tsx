@@ -1,57 +1,41 @@
-import { Major, University } from "../data";
-import { ADD_TO_GOAL, REMOVE_FROM_GOAL } from "./action";
-
-export interface GoalState {
-    uniItem: University;
-    majorItem: Major;
-}
-
-export const initialState: GoalState[] = []
-
-const goalReducer = (state = initialState, action: any) => {
-    console.log(`Action: ${action}`);
-    console.log(`Previous state: ${state}`);
-
-    switch (action.type) {
-        case ADD_TO_GOAL:
-            return {
-                ...state,
-                uniItem: action.payload.uniItem,
-                majorItem: action.payload.majorItem
-            }
-        case REMOVE_FROM_GOAL:
-            return {
-                ...state,
-                uniItem: action.payload.uniItem,
-                majorItem: action.payload.majorItem
-            }
-        default:
-            throw new Error(`Unhandled action type: ${action.type}`);
-    }
-}
-
-export default goalReducer;
-
-
-// import { useReducer } from "react";
-// import { ADD_TO_GOAL, REMOVE_FROM_GOAL, addGoal, removeGoal } from "./action";
-// import goalReducer, { GoalState, initialState } from "./reducer";
-// import { Major, University } from "../data";
-
-// function RootProvider() {
-//     const [state, dispatch] = useReducer(goalReducer, initialState);
-
-//     const { goalItems } = state;
-
-//     const addGoalItem = (uniItem: University, majorItem: Major) => {
-//         dispatch(addGoal(uniItem, majorItem));
+//FIXME: NEED CHANGE IN NEW PJ: Add action types and action creators here
+// export default function setReducer(state = initialState, action: Action): ExampleInitInter {
+//     switch (action.type) {
+//         case Example: {
+//             return {
+//                 ...state,
+//                 example: action.payload
+//             };
+//         }
+//         default:
+//             return state;
 //     }
-
-//     const removeGoalItem = (uniItem: University, majorItem: Major) => {
-//         dispatch(removeGoal(uniItem, majorItem));
-//     }
-
-    
 // }
 
-// export default RootProvider;
+import * as FormatData from "../interfaceFormat";
+import {
+    initialState, CurrentCache, Action,
+} from "./initial";
+
+import * as TYPE from "./action";
+
+export default function setReducer(state = initialState, action: Action): CurrentCache {
+    switch (action.type) {
+        case TYPE.SET_USER: {
+            return {
+                ...state,
+                user: action.payload as FormatData.UserFormat
+            };
+        }
+
+        case TYPE.SET_ONGOING_PODCAST: {
+            return {
+                ...state,
+                onGoingPodcastID: action.payload as { id: number, epID: number }
+            };
+        }
+
+        default:
+            return state;
+    }
+}

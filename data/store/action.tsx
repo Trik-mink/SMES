@@ -1,18 +1,27 @@
-import { Major, University } from "../data";
+//FIXME: NEED CHANGE IN NEW PJ: Add action types and action creators here
 
-export const ADD_TO_GOAL = 'ADD_TO_GOAL';
-export const REMOVE_FROM_GOAL = 'REMOVE_FROM_GOAL';
+import { UserFormat } from "../interfaceFormat";
 
-export const addGoal = (uniItem: University, majorItem: Major) => {
+// export const EXAMPLE = `EXAMPLE`;
+// export const examplefnc = (item: any) => {
+//     return {
+//         type: EXAMPLE,
+//         payload: item
+//     }
+// }
+
+export const SET_USER = `SET_USER`;
+export const currentSetUser = (user: UserFormat) => {
     return {
-        type: ADD_TO_GOAL,
-        payload: { uniItem, majorItem }
+        type: SET_USER,
+        payload: user
     }
 }
 
-export const removeGoal = (uniItem: University, majorItem: Major) => {
+export const SET_ONGOING_PODCAST = `SET_ONGOING_PODCAST`;
+export const currentSetOngoingPodcast = (podcast: any) => {
     return {
-        type: REMOVE_FROM_GOAL,
-        payload: { uniItem, majorItem }
+        type: SET_ONGOING_PODCAST,
+        payload: podcast
     }
 }

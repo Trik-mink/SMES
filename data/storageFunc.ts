@@ -1,14 +1,9 @@
 import Storage from 'react-native-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  CompareMajorItem,
-  Major,
-  RecentSearch,
-  University,
-  UserInfo,
-} from './data';
-import {Alert} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { Alert } from 'react-native';
+import * as FORMATDATA from './interfaceFormat';
+import { factoryData } from './factoryData';
 
 const storage = new Storage({
   // maximum capacity, default 1000 key-ids
@@ -32,318 +27,274 @@ const storage = new Storage({
     // Sync method for retrieving data from the server
   },
 });
+
 export default storage;
 
 /**
- * Saves the exercise course data to storage.
- * @param exerciseCourse - The exercise course data to be saved.
- * @param category - The category of the exercise course.
- * @param index - The index of the exercise course.
+ * Saves the user data to storage.
+ *
+ * @param data - The user data to be saved.
+ * @returns A promise that resolves to `true` if the data was saved successfully, or `false` if there was an error.
  */
-
-export async function saveUserInfo(
-  data: UserInfo,
-): Promise<boolean | undefined> {
+export const saveUser = async (data: FORMATDATA.UserFormat): Promise<boolean> => {
   try {
     await storage.save({
-      key: 'userInfo',
+      key: 'user',
       data: data,
     });
     return true;
   } catch (error) {
-    Alert.alert('Failed to save user info');
+    Alert.alert('Failed to save user');
+    console.log('Failed to save user:', error);
     return false;
   }
-}
+};
 
 /**
- * Retrieves the exercise course data from storage.
- * @returns The exercise course data.
+ * Retrieves the user data from storage.
+ *
+ * @returns {Promise<FORMATDATA.UserFormat | false>} A promise that resolves to the user data if found, or `false` if an error occurs.
  */
-export async function getUserInfo(
-  enableAlert?: boolean,
-): Promise<UserInfo | undefined> {
+export const getUser = async (): Promise<FORMATDATA.UserFormat | false> => {
   try {
-    const data = await storage.load({
-      key: 'userInfo',
+    const ret: FORMATDATA.UserFormat = await storage.load({
+      key: 'user',
     });
-    return data;
+    return ret;
   } catch (error) {
-    enableAlert ? Alert.alert('No user info found') : null;
-    return undefined;
-  }
-}
-
-// remove user info
-export async function removeAllUserInfo(): Promise<void> {
-  await storage.remove({
-    key: 'wishList',
-  });
-  await storage.remove({
-    key: 'compareData',
-  });
-  await storage.remove({
-    key: 'userInfo',
-  });
-  await storage.remove({
-    key: 'recentSearch',
-  });
-  await storage.remove({
-    key: 'goalList',
-  });
-}
-
-// save recent search
-export async function saveRecentSearch(
-  data: RecentSearch[],
-): Promise<boolean | undefined> {
-  try {
-    await storage.save({
-      key: 'recentSearch',
-      data: data,
-    });
-    return true;
-  } catch (error) {
-    Alert.alert('Failed to save recent search');
-    return false;
-  }
-}
-
-// get recent search
-export async function getRecentSearch(): Promise<RecentSearch[] | undefined> {
-  try {
-    const data = await storage.load({
-      key: 'recentSearch',
-    });
-    return data;
-  } catch (error) {
-    console.log('No recent search found');
-    return undefined;
-  }
-}
-
-export async function resetPersonalData(): Promise<void> {
-  let newUserInfo: UserInfo;
-  try {
-    const data = await getUserInfo();
-    if (data) {
-      newUserInfo = {
-        synced: data.synced,
-        name: data.name,
-        email: data.email,
-        userID: data.userID,
-        loginMethod: data.loginMethod,
-        password: data.password,
-        createTime: data.createTime,
-        dataCollect: false,
-        age: 0,
-        data: {
-          persona: ``,
-          interest: [],
-          favorite: [],
-          goal: ``,
-        },
-      };
-      await saveUserInfo(newUserInfo).then(() => {
-        console.log('Personal data reset');
-
-        return true;
-      });
-    }
-  } catch (error) {
-    console.error('Error resetting personal data:', error);
-  }
-}
-
-export const saveCompareData = async (data: CompareMajorItem[]) => {
-  try {
-    await storage.save({
-      key: 'compareData',
-      data: data,
-    });
-    return true;
-  } catch (error) {
-    Alert.alert('Failed to save compare data');
+    console.log('Failed to get user:', error);
     return false;
   }
 };
 
-export const saveCompareDataWithAlert = async (
-  uniItem: University,
-  major: Major,
-  naviFnc: () => void,
-) => {
-  let data: CompareMajorItem = {
-    uniItem: uniItem as University,
-    major: major as Major,
-  };
-  getCompareData().then(compareData => {
-    console.log(compareData);
-    if (compareData) {
-      if (
-        !compareData.find(
-          item =>
-            item.uniItem.name === data.uniItem.name &&
-            item.major.majorName === data.major.majorName,
-        )
-      ) {
-        compareData.push(data);
-        saveCompareData(compareData).then(res => {
-          if (res) {
-            if (compareData.length > 1) {
-              Alert.alert(
-                'Add to compare list successfully',
-                `You have ${compareData.length} items in your list. Do you want to compare them now?`,
-                [
-                  {text: 'Cancel'},
-                  {text: 'OK', style: 'default', onPress: naviFnc},
-                ],
-              );
-            } else {
-              Alert.alert('Success', 'Add to compare list successfully');
-            }
-          }
-        });
-      } else {
-        Alert.alert(
-          'No need to add',
-          'This item is already in your compare list',
-        );
-      }
-    } else {
-      saveCompareData([data]).then(res => {
-        if (res) {
-          Alert.alert('Success', 'Add to compare list successfully');
-        }
-      });
-    }
-  });
-};
-
-export const getCompareData = async (): Promise<
-  CompareMajorItem[] | undefined
-> => {
+/**
+ * Asynchronously removes the user data from storage.
+ *
+ * @returns {Promise<boolean>} A promise that resolves to `true` if the user data was successfully removed,
+ *                             or `false` if an error occurred during the removal process.
+ */
+export const removeUser = async (): Promise<boolean> => {
   try {
-    const data = await storage.load({
-      key: 'compareData',
-    });
-    return data;
-  } catch (error) {
-    console.log('No compare data found');
-    return undefined;
-  }
-};
-
-export const removeCompareData = async () => {
-  await storage.remove({
-    key: 'compareData',
-  });
-};
-
-export const saveWishlist = async (uniItem: University, major: Major) => {
-  let data: CompareMajorItem = {
-    uniItem: uniItem as University,
-    major: major as Major,
-  };
-  const saveFNC = async (data: CompareMajorItem[]) => {
-    try {
-      await storage.save({
-        key: 'wishList',
-        data: data,
-      });
-      return true;
-    } catch (error) {
-      Alert.alert('Failed to save wish data');
-      return false;
-    }
-  };
-
-  return getWishlist().then(wishData => {
-    console.log(wishData);
-    if (wishData) {
-      if (
-        !wishData.find(
-          item =>
-            item.uniItem.name === data.uniItem.name &&
-            item.major.majorName === data.major.majorName,
-        )
-      ) {
-        wishData.push(data);
-        return saveFNC(wishData).then(res => {
-          if (res) {
-            Alert.alert('Success', 'Add to wish list successfully');
-            return true;
-          }
-          return false;
-        });
-      } else {
-        Alert.alert('No need to add', 'This item is already in your wish list');
-        return false;
-      }
-    } else {
-      return saveFNC([data]).then(res => {
-        if (res) {
-          Alert.alert('Success', 'Add to wishlist successfully');
-          return true;
-        }
-        return false;
-      });
-    }
-  });
-};
-
-export const updateWishlist = async (data: CompareMajorItem[]) => {
-  try {
-    await storage.save({
-      key: 'wishList',
-      data: data,
+    await storage.remove({
+      key: 'user',
     });
     return true;
   } catch (error) {
-    Alert.alert('Failed to save wish data');
+    console.log('Failed to remove user:', error);
     return false;
   }
 };
 
-export const getWishlist = async (): Promise<
-  CompareMajorItem[] | undefined
-> => {
-  try {
-    const data = await storage.load({
-      key: 'wishList',
-    });
-    return data;
-  } catch (error) {
-    console.log('No wish data found');
-    return undefined;
-  }
-};
+// END OF DEFAULT STORAGE FUNCTIONS ______________________________________________________
 
-export const saveGoalMajor = async (uniName: string, major: Major) => {
-  let data = {
-    uniName: uniName as string,
-    major: major as Major,
-  };
-  try {
-    await storage.save({
-      key: 'goalList',
-      data: data,
-    });
-    return true;
-  } catch (error) {
-    Alert.alert('Failed to save goal data');
-    return false;
-  }
-};
+// export const savePillList = async (dataArr: PillFormat[]) => {
+//   try {
+//     await Promise.all(dataArr.map(async (data) => {
+//       await storage.save({
+//         key: 'pill',
+//         data: data,
+//         id: data.pill_id,
+//       });
+//     }));
+//     return true;
+//   } catch (error) {
+//     Alert.alert('Failed to save drug list');
+//     console.log('Failed to save pill list:', error);
+//     return false;
+//   }
+// }
 
-export const getGoalMajor = async (): Promise<CompareMajorItem | undefined> => {
-  try {
-    const data = await storage.load({
-      key: 'goalList',
-    });
-    return data;
-  } catch (error) {
-    console.log('No goal data found');
-    return undefined;
-  }
-};
+// export const getPillList = async (): Promise<PillFormat[] | false> => {
+//   try {
+//     const ret: PillFormat[] = await storage.getAllDataForKey('pill');
+//     return ret;
+//   } catch (error) {
+//     console.log('Failed to get pill list:', error);
+//     return false;
+//   }
+// }
+
+// export const getPillById = async (id: string): Promise<PillFormat | false> => {
+//   try {
+//     const ret: PillFormat = await storage.load({
+//       key: 'pill',
+//       id: id,
+//     });
+//     return ret;
+//   } catch (error) {
+//     console.log('Failed to get pill by id:', error);
+//     return false;
+//   }
+// }
+
+// export const removePillById = async (id: string): Promise<boolean> => {
+//   try {
+//     await storage.remove({
+//       key: 'pill',
+//       id: id,
+//     });
+//     return true;
+//   } catch (error) {
+//     console.log('Failed to remove pill:', error);
+//     return false;
+//   }
+// }
+
+// export const clearPillList = async (): Promise<boolean> => {
+//   try {
+//     await storage.clearMapForKey('pill');
+//     return true;
+//   } catch (error) {
+//     console.log('Failed to clear pill list:', error);
+//     return false;
+//   }
+// }
+
+// export const editPillById = async (id: string, data: PillFormat): Promise<boolean> => {
+//   try {
+//     await storage.save({
+//       key: 'pill',
+//       data: data,
+//       id: id,
+//     });
+//     return true;
+//   } catch (error) {
+//     console.log('Failed to edit pill:', error);
+//     return false;
+//   }
+// }
+
+// export const saveOrder = async (data: OrderFormat, idItem: string) => {
+//   try {
+//     await storage.save({
+//       key: 'order',
+//       data: data,
+//       id: idItem,
+//     });
+//     return true;
+//   } catch (error) {
+//     Alert.alert('Failed to save order');
+//     console.log('Failed to save order:', error);
+//     return false;
+//   }
+// }
+
+// export const getOrderList = async (): Promise<OrderFormat[] | false> => {
+//   try {
+//     const ret: OrderFormat[] = await storage.getAllDataForKey('order');
+//     console.log('Order list:', ret);
+//     return ret;
+//   } catch (error) {
+//     console.log('Failed to get order list:', error);
+//     return false;
+//   }
+// }
+
+// export const removeOrderById = async (id: string): Promise<boolean> => {
+//   try {
+//     await storage.remove({
+//       key: 'order',
+//       id: id,
+//     });
+//     return true;
+//   } catch (error) {
+//     console.log('Failed to remove order:', error);
+//     return false;
+//   }
+// }
+
+// export const clearOrderList = async (): Promise<boolean> => {
+//   try {
+//     await storage.clearMapForKey('order');
+//     return true;
+//   } catch (error) {
+//     console.log('Failed to clear order list:', error);
+//     return false;
+//   }
+// }
+
+// export const editCart = async (pills: PillFormat | PillFormat[]): Promise<boolean> => {
+//   const prepare = (): PillFormat[] => {
+//     let data: PillFormat[] = [];
+//     if (Array.isArray(pills)) {
+//       data.push(...pills);
+//     } else {
+//       data.push(pills);
+//     }
+//     return data;
+//   };
+
+//   try {
+//     await storage.save({
+//       key: 'cart',
+//       data: prepare(),
+//     });
+//     return true;
+//   } catch (error) {
+//     console.error('Failed to save cart:', error);
+//     return false;
+//   }
+// }
+
+// export const getCart = async (): Promise<PillFormat[] | false> => {
+//   try {
+//     const ret: PillFormat[] = await storage.load({ key: 'cart' })
+//     return ret;
+//   } catch (error) {
+//     console.error('Failed to get cart:', error);
+//     return false;
+//   }
+// }
+
+// export const clearCart = async (): Promise<boolean> => {
+//   try {
+//     await storage.clearMapForKey('cart');
+//     return true;
+//   } catch (error) {
+//     console.error('Failed to clear cart:', error);
+//     return false;
+//   }
+// }
+
+// export const loadDemoData = async (): Promise<boolean> => {
+//   try {
+//     // Save all pills and orders concurrently
+//     await Promise.all([
+//       savePillList(factoryData.pillList),
+//       factoryData.orderList.forEach(async (order) => {
+//         let res = await saveOrder(order, order.order_id);
+//         console.log('Save order:', res, order.order_id);
+//       }),
+//     ]);
+
+//     const data: DataStorageFormat = {
+//       pillList: factoryData.pillList,
+//       pillPortList: factoryData.pillPortList,
+//       orderList: factoryData.orderList,
+//       lastChange: factoryData.lastChange,
+//     };
+
+//     await storage.save({
+//       key: 'DATADEMO',
+//       data: data,
+//     });
+
+//     return true;
+//   } catch (error) {
+//     console.log('Failed to load demo data:', error);
+//     return false;
+//   }
+// }
+
+// export const clearData = async (): Promise<boolean> => {
+//   try {
+//     await clearOrderList();
+//     await clearPillList();
+//     await clearCart();
+//     await storage.clearMapForKey('DATADEMO');
+//     return true;
+//   } catch (error) {
+//     console.log('Failed to clear data:', error);
+//     return false;
+//   }
+// }

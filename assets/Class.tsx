@@ -1,23 +1,26 @@
-import React, { Children, Component, ComponentType, useRef, useState } from 'react';
 // system import
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, Text, ScrollView, useColorScheme, TouchableOpacity, ImageBackground, Image, Animated, TextInput, Easing, SafeAreaView, StatusBar, FlatList, } from 'react-native';
+import React, { Component, ComponentType, useState } from 'react';
+import { ImageBackground, Platform, SafeAreaView, StatusBar, Text, TextInput, TouchableOpacity, View, Image, ImageStyle, StatusBarStyle, ReturnKeyType, KeyboardType, FlatList, TextInputProps, Animated, Easing, ViewStyle, FlexStyle, TextInputIOSProps } from 'react-native';
 
 // style import
 import styles from './stylesheet';
-import { vw, vh, vmax, vmin } from './stylesheet';
+import { vw, vh } from './stylesheet';
+import { clrStyle, NGHIASTYLE } from './componentStyleSheet';
 
 // component import
-import { marginBottomForScrollView } from './component';
+import { marginBottomForScrollView } from '@/assets/component';
 
-// svg import
-import { compareIcon, compareIconActive, homeIcon, homeIconActive, searchIcon, settingIcon, settingIconActive, sharpLeftArrow, sharpRightArrow, userIcon, userIconActive } from './svgXml';
-import clrStyle from './componentStyleSheet';
+import { CurrentCache } from '../data/store';
+import * as SVG from './svgXml';
+import * as FormatData from '../data/interfaceFormat';
+import * as CTEXT from './CustomText';
+
+// other import
+
 
 // ____________________END OF IMPORT_______________________
 
-// UNIVESAL CLASS SECTION
+// ____________________START OF UNIVERSAL CLASS_______________________
 
 
 /**
@@ -69,483 +72,337 @@ export class SaveViewWithColorStatusBar extends Component<{ children?: React.Rea
     }
 }
 
-export class BottomBar extends Component<{ navFnc: any, currentScreen: string, bgColor?: string, shadow?: boolean }> {
+export class ViewRow extends Component<{ children?: React.ReactNode, style?: any }> {
     render() {
-        const { navFnc, currentScreen, bgColor, shadow } = this.props;
-
-        // change style
-        interface CustomStyle {
-            font?: React.ComponentType<{ children: React.ReactNode, style?: any }>,
-            fontActive?: React.ComponentType<{ children: React.ReactNode, style?: any }>,
-            showText?: boolean,
-            textColor?: string,
-            textActiveColor?: string,
-        }
-
-        interface BottomBarItem {
-            title: string,
-            icon: any,
-            iconActive: any,
-            screen: string,
-        }
-
-        // change resource
-        const itemList: BottomBarItem[] = [
-            { title: 'Home', icon: homeIcon(vw(6), vw(6)), iconActive: homeIconActive(vw(6), vw(6)), screen: 'Home' },
-            { title: 'User', icon: userIcon(vw(6), vw(6)), iconActive: userIconActive(vw(6), vw(6)), screen: 'User' },
-            { title: 'Compare', icon: compareIcon(vw(6), vw(6)), iconActive: compareIconActive(vw(6), vw(6)), screen: 'Compare' },
-            { title: 'Settings', icon: settingIcon(vw(6), vw(6)), iconActive: settingIconActive(vw(6), vw(6)), screen: 'Settings' },
-        ]
-
-        const customStyle: CustomStyle = {
-            font: Nunito12Reg,
-            fontActive: Nunito12Bold,
-            showText: true,
-            textColor: clrStyle.grey2,
-            textActiveColor: clrStyle.main5,
-        }
-
         return (
-            // custom style if u want to
-            <View style={[styles.w100vw, styles.flexRowEvenlyCenter, styles.alignContentCenter,
-            {
-                height: 'auto',
-                backgroundColor: bgColor ? bgColor : 'white',
-                shadowColor: shadow ? 'black' : 'transparent',
-                shadowOffset: { width: 0, height: -vw(2) },
-                shadowOpacity: 0.1,
-                shadowRadius: vw(1),
-                elevation: 10,
-            }]}>
-                {itemList.map((item, index) => {
-                    return (
-                        <TouchableOpacity key={index}
-                            onPress={() => { navFnc().navigate(item.screen) }}
-                            style={[styles.flexColCenter, styles.paddingV3vw, { width: (vw(80) / (itemList.length + 1)) }]}>
-                            {currentScreen === item.screen ? item.iconActive : item.icon}
-                            {customStyle.showText && customStyle.font ? currentScreen === item.screen && customStyle.fontActive ?
-                                <customStyle.fontActive style={{ color: customStyle.textActiveColor }}>{item.title}</customStyle.fontActive> :
-                                <customStyle.font style={{ color: customStyle.textColor }}>{item.title}</customStyle.font>
-                                : null}
-                        </TouchableOpacity>
-                    )
-                })}
+            <View style={[styles.flexRow, this.props.style]}>
+                {this.props.children}
             </View>
         )
     }
 }
 
-export class BannerSliderWithCenter extends Component<{
-    data: any[],
-    renderBanner: ({ item, index }: { item: any, index: number }) => React.ReactNode,
-    currentIndex: number,
-    setCurrentIndex: (value: number) => void,
-    itemWidth?: number,
-    snapToCenter?: boolean,
-    customStyle?: any,
-    customContainerStyle?: any,
-}> {
+export class ViewCol extends Component<{ children?: React.ReactNode, style?: any }> {
     render() {
-        const { data, renderBanner, currentIndex, setCurrentIndex, itemWidth, snapToCenter, customStyle, customContainerStyle } = this.props;
-        const width = itemWidth ?? 1;
         return (
-            <FlatList
-                data={data}
-                renderItem={renderBanner}
-                snapToInterval={width}
-                snapToAlignment={snapToCenter ? 'center' : 'start'}
-                // time to snap to the center
-                decelerationRate='fast'
-                keyExtractor={(item, index) => index.toString()}
-                horizontal={true}
-                // pagingEnabled={false}
-                showsHorizontalScrollIndicator={false}
-                onScroll={(event) => {
-                    setCurrentIndex(Math.round(event.nativeEvent.contentOffset.x / width))
-                }}
-                style={customStyle}
-                contentContainerStyle={[styles.flexRowStartCenter, customContainerStyle]}
-            />
+            <View style={[styles.flexCol, this.props.style]}>
+                {this.props.children}
+            </View>
         )
     }
 }
 
+export class ViewRowCenter extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexRowCenter, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class ViewColCenter extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexColCenter, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class ViewRowBetweenCenter extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexRowBetweenCenter, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class ViewColBetweenCenter extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexColBetweenCenter, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class ViewRowEvenlyCenter extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexRowEvenlyCenter, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class ViewColEvenlyCenter extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexColEvenlyCenter, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class ViewColEndCenter extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexColEndCenter, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class ViewRowStartCenter extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexRowStartCenter, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class ViewColStartCenter extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexColStartCenter, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class ViewColStartBetween extends Component<{ children?: React.ReactNode, style?: any }> {
+    render() {
+        return (
+            <View style={[styles.flexCol, styles.justifyContentSpaceBetween, this.props.style]}>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+// ____________________END OF UNIVERSAL CLASS_______________________
+
+// ____________________START OF FONT_______________________
+
 // END OF UNIVERSAL CLASS SECTION
 
-// FONT SECTION
-export class Nunito12Med extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
+/**
+ * A React component that renders a customizable status bar and its content.
+ * 
+ * @remarks
+ * This component is designed to work with both Android and iOS platforms.
+ * It allows customization of the status bar's color, content style, and translucency.
+ * Additionally, it provides an option to add a margin below the status bar on Android devices.
+ * 
+ * @param barColor - Optional. The color of the status bar background.
+ * @param trans - Optional. If true, the status bar will be translucent.
+ * @param children - Optional. The content to be rendered below the status bar.
+ * @param bgColor - Optional. The background color of the view containing the status bar and its content.
+ * @param barContentStyle - Optional. The style of the status bar content (e.g., 'dark-content', 'light-content').
+ * @param notMargin - Optional. If true, no margin will be added below the status bar on Android devices.
+ * 
+ * @returns A React node containing the status bar and its content.
+ */
+export class SSBar extends Component<{ barColor?: any, trans?: boolean, children?: React.ReactNode, bgColor?: any, barContentStyle?: StatusBarStyle, notMargin?: boolean }> {
+    render(): React.ReactNode {
+        let statusBarHeight = StatusBar.currentHeight ? StatusBar.currentHeight : 0
         return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Medium', fontSize: vw(3) }, style]}>
-                {children}
-            </Text>
+            <View style={[styles.flex1, { backgroundColor: this.props.bgColor ? this.props.bgColor : clrStyle.white }]}>
+                <>
+                    <StatusBar
+                        barStyle={this.props.barContentStyle ? this.props.barContentStyle : 'dark-content'}
+                        translucent={this.props.trans ? true : false}
+                        backgroundColor={this.props.barColor ? this.props.barColor : 'white'} />
+                    {Platform.OS === 'android' && !this.props.notMargin ? <View style={{ height: statusBarHeight * 1.5 }}></View> : null}
+                </>
+                {this.props.children}
+            </View>
+        )
+    }
+}
+
+export class SSBarWithSaveArea extends Component<{ barColor?: any, trans?: boolean, children?: React.ReactNode, bgColor?: any, barContentStyle?: StatusBarStyle, margin?: boolean }> {
+    render(): React.ReactNode {
+        let statusBarHeight = StatusBar.currentHeight ? StatusBar.currentHeight : 0
+        return (
+            <SafeAreaView style={[styles.flex1, { backgroundColor: this.props.bgColor ? this.props.bgColor : clrStyle.white }]}>
+                <StatusBar
+                    barStyle={this.props.barContentStyle ? this.props.barContentStyle : 'dark-content'}
+                    translucent={this.props.trans ? true : false}
+                    backgroundColor={this.props.barColor ? this.props.barColor : 'white'} />
+                {Platform.OS === 'android' && this.props.margin ? <View style={{ height: statusBarHeight }}></View> : null}
+                {this.props.children}
+            </SafeAreaView>
+        )
+    }
+}
+
+/**
+ * A React component that renders a customizable round button.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <RoundBtn
+ *   icon={<SomeIcon />}
+ *   title="Click Me"
+ *   onPress={() => console.log('Button pressed')}
+ *   bgColor="#ff0000"
+ *   textClass={CustomTextComponent}
+ *   textColor="#ffffff"
+ *   iconColor="#000000"
+ *   border={true}
+ *   borderColor="#00ff00"
+ *   customStyle={{ margin: 10 }}
+ * />
+ * ```
+ *
+ * @prop {React.ReactNode} [icon] - The icon to display inside the button.
+ * @prop {string} [title] - The text to display inside the button.
+ * @prop {() => void} onPress - The function to call when the button is pressed.
+ * @prop {string} [bgColor] - The background color of the button.
+ * @prop {React.ComponentType<any>} [textClass] - The custom text component to use for the button text.
+ * @prop {string} [textColor] - The color of the button text.
+ * @prop {string} [iconColor] - The color of the icon.
+ * @prop {boolean} [border] - Whether the button should have a border.
+ * @prop {string} [borderColor] - The color of the border.
+ * @prop {any} [customStyle] - Additional custom styles for the button.
+ */
+export class RoundBtn extends Component<{
+    icon?: React.ReactNode
+    title?: string
+    onPress: () => void
+    bgColor?: string
+    textClass?: React.ComponentType<any>
+    textColor?: string
+    iconColor?: string
+    border?: boolean
+    borderColor?: string
+    customStyle?: any
+}> {
+    render() {
+        const { icon, title, onPress, bgColor, textClass, textColor, iconColor, border, borderColor, customStyle } = this.props;
+        let TextClass = textClass ? textClass : Text
+        return (
+            <TouchableOpacity
+                onPress={onPress}
+                style={[styles.flexRow, styles.w100, styles.alignItemsCenter, styles.padding4vw, styles.gap3vw, styles.borderRadius10, styles.overflowHidden, { backgroundColor: bgColor ? bgColor : undefined, borderWidth: border ? 1 : 0, }, customStyle]}>
+                {icon ? icon : null}
+                <TextClass style={[{ color: textColor ? textColor : clrStyle.black as string }]}>{title}</TextClass>
+            </TouchableOpacity>
         );
     }
 }
 
-export class Nunito14Med extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
+// ________________________________________________________________________________________-
+// ________________________________________________________________________________________-
 
+export class SearchBox extends Component<{
+    customStyle?: any
+    placeholder?: string
+    placeholderTextColor?: any
+    value: string
+    onChangeText?: (input: any) => void
+    onClear?: () => void
+    showSearchIcon?: boolean
+    fontFam?: string
+    currentCache?: CurrentCache
+}> {
+    render() {
+        async function searchEngine(keyword: string, dataBank: any, type: 'set' | 'desk' | 'card') {
+            keyword = value.trim();
+            // keyword = keyword.trim();
+            let result: any = [];
+            const regex = new RegExp(`\\b${keyword}`, 'i');
+
+            if (keyword === '') {
+                return [];
+            }
+        }
+
+        const { customStyle, placeholder, placeholderTextColor, value, onChangeText, onClear, showSearchIcon, fontFam } = this.props;
         return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Medium', fontSize: vw(3.5) }, style]}>
-                {children}
-            </Text>
+            <ViewRowBetweenCenter
+                style={[styles.gap3vw, styles.borderRadius10, styles.paddingH4vw, { backgroundColor: clrStyle.white, borderColor: clrStyle.black }, customStyle]}>
+                {showSearchIcon ? SVG.searchIcon(vw(5), vw(5), clrStyle.black) : null}
+                <TextInput
+                    style={[styles.flex1, styles.paddingV2vw, { color: clrStyle.black as string, fontSize: vw(3.5), fontFamily: fontFam ? fontFam : undefined }]}
+                    value={value}
+                    onChangeText={onChangeText}
+                    placeholder={placeholder ? placeholder : 'Search'}
+                    placeholderTextColor={placeholderTextColor ? placeholderTextColor : ''}
+                />
+                <TouchableOpacity
+                    onPress={onClear}
+                    style={{ display: value ? 'flex' : 'none' }}
+                >
+                    {SVG.xIcon(vw(5), vw(5), clrStyle.black)}
+                </TouchableOpacity>
+            </ViewRowBetweenCenter>
         );
     }
 }
 
-export class Nunito16Med extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
+interface SearchBoxState {
+    showSearch: boolean;
+    searchInput: string;
 
+}
+
+export class TopNav2 extends Component<{
+    containerStyle?: any
+    backGoundImage: any
+}> {
+    render() {
+        let { containerStyle, backGoundImage } = this.props
         return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Medium', fontSize: vw(4) }, style]}>
-                {children}
-            </Text>
+            <View style={[containerStyle, styles.bgcolorWhite, { containerStyle }]}>
+                <Image source={backGoundImage} resizeMethod='resize' resizeMode='cover' style={[styles.flex1, styles.alignSelfCenter] as ImageStyle} />
+            </View>
+        )
+    }
+}
+
+export class TopBarWithAvatarIMGand2RightIcon extends Component<{
+    title: string
+    avatarIMG: any
+    rightIcon1: any
+    rightIcon1Press?: () => void
+    avatarPress?: () => void
+    customStyle?: any
+}> {
+    render() {
+        const { avatarIMG, rightIcon1, rightIcon1Press, title, avatarPress, customStyle } = this.props;
+        return (
+            <ViewRowBetweenCenter style={[styles.padding4vw, customStyle]}>
+                <CTEXT.Inter20Bold style={{ color: NGHIASTYLE.NghiaGray700 }}>{title}</CTEXT.Inter20Bold>
+                <ViewRowBetweenCenter style={[styles.gap3vw]}>
+                    <TouchableOpacity
+                        style={[styles.borderRadius100, styles.padding1vw, { backgroundColor: '#F2F4F7' }]}
+                        onPress={avatarPress ? avatarPress : undefined}>
+                        {avatarIMG ? <Image source={{ uri: avatarIMG }} style={[styles.borderRadius100, { width: vw(6), height: vw(6) }] as ImageStyle} /> : <View style={[styles.borderRadius100, styles.bgcolorBlack, { width: vw(6), height: vw(6) }]} />}
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={rightIcon1Press ? rightIcon1Press : undefined}>
+                        {rightIcon1}
+                    </TouchableOpacity>
+                </ViewRowBetweenCenter>
+            </ViewRowBetweenCenter>
         );
     }
 }
 
-export class Nunito18Med extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Medium', fontSize: vw(4.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito10Reg extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Regular', fontSize: vw(2.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito12Reg extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Regular', fontSize: vw(3) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito14Reg extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Regular', fontSize: vw(3.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito16Reg extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Regular', fontSize: vw(4) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito24Reg extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Regular', fontSize: vw(6) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito18Reg extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Regular', fontSize: vw(4.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito12Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Bold', fontSize: vw(3) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito14Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Bold', fontSize: vw(3.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito16Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Bold', fontSize: vw(4) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito18Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Bold', fontSize: vw(4.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito20Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Bold', fontSize: vw(5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito22Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Bold', fontSize: vw(5.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito24Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-Bold', fontSize: vw(6) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Nunito14ExBold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Nunito-ExtraBold', fontSize: vw(3.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Signika20Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Signika-Bold', fontSize: vw(5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Signika22Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Signika-Bold', fontSize: vw(5.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Signika24Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Signika-Bold', fontSize: vw(6) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Signika28Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Signika-Bold', fontSize: vw(7) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class SonsieOne100 extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'SonsieOne-Regular', fontSize: vw(25), color: '#85C5C9' }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Signika20SemiBold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Signika-SemiBold', fontSize: vw(5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Signika22SemiBold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Signika-SemiBold', fontSize: vw(5.5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Signika24SemiBold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Signika-SemiBold', fontSize: vw(6) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Roboto20Med extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Roboto-Medium', fontSize: vw(5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Roboto16Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Roboto-Bold', fontSize: vw(4) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Roboto20Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Roboto-Bold', fontSize: vw(5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class SFproDisplay20Med extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'SF-Pro-Display-Medium', fontSize: vw(5) }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-export class Helvetica19Bold extends Component<{ children: React.ReactNode, style?: any, lineNumber?: number }> {
-    render() {
-        const { children, style, lineNumber } = this.props;
-
-        return (
-            <Text numberOfLines={lineNumber} style={[{ fontFamily: 'Helvetica', fontSize: vw(4.75), fontWeight: 'bold' }, style]}>
-                {children}
-            </Text>
-        );
-    }
-}
-
-// FNC COMPONENT SECTION
 export class LowBtn extends Component<{
     title: string,
     onPress: () => void,
@@ -558,9 +415,9 @@ export class LowBtn extends Component<{
 }> {
     render() {
         const { title, onPress, bgColor, fontColor, icon, round, CustomStyle, FontElement } = this.props;
-        const Font = FontElement ? FontElement : Roboto16Bold;
+        const Font = FontElement ? FontElement : CTEXT.Nunito14Bold;
         return (
-            <TouchableOpacity onPress={onPress} style={[styles.flexRowCenter, styles.gap3vw, styles.borderRadius100, styles.shadowW0H1Black, styles.w90, styles.alignSelfCenter, { backgroundColor: bgColor ? bgColor : clrStyle.main5, padding: vw(3.75), borderRadius: round ? round : vw(1000) }, CustomStyle ? CustomStyle : null]}>
+            <TouchableOpacity onPress={onPress} style={[styles.flexRowCenter, styles.gap3vw, styles.borderRadius100, styles.shadowW0H1Black, styles.w90, styles.alignSelfCenter, { backgroundColor: bgColor ? bgColor : clrStyle.black, padding: vw(3.75), borderRadius: round ? round : vw(1000) }, CustomStyle ? CustomStyle : null]}>
                 {icon ? icon : null}
                 <Font style={{ color: fontColor ? fontColor : clrStyle.white, }}>{title}</Font>
             </TouchableOpacity>
@@ -578,6 +435,7 @@ export class BoardingInput extends Component<{
     value: string | number,
     isNumber?: boolean,
     onChgText: (value: string | number) => void,
+    TitleFontClass?: React.ComponentType<any>,
     CustomStyleClass?: any,
     CustomStyleText?: any,
     CustomStyleInput?: any,
@@ -586,10 +444,13 @@ export class BoardingInput extends Component<{
     hideContentFnc?: (value: boolean) => void,
     autoCap?: 'none' | 'characters' | 'words' | 'sentences',
     maxLength?: number,
+    activeColor?: string,
+    passiveColor?: string,
+    tileColor?: string,
 }> {
 
     render() {
-        const { title, placeholder, value, onChgText, CustomStyleClass, CustomStyleInput, CustomStyleText, contentType, subTitle, supFnc, supFncTitle, hideContent, hideContentFnc, autoCap, maxLength, supFncTitleColor } = this.props;
+        const { title, placeholder, value, TitleFontClass, onChgText, CustomStyleClass, CustomStyleInput, CustomStyleText, contentType, subTitle, supFnc, supFncTitle, hideContent, hideContentFnc, autoCap, maxLength, supFncTitleColor, activeColor, passiveColor, tileColor } = this.props;
         const isNumber = this.props.isNumber ? this.props.isNumber : false;
 
         function changFnc(value: string | number) {
@@ -600,33 +461,35 @@ export class BoardingInput extends Component<{
             }
         }
 
+        let TitleFont = TitleFontClass ? TitleFontClass : Text;
+
         return (
             <View style={[styles.flexColCenter, styles.gap4vw, styles.positionRelative, CustomStyleClass]}>
                 {title ?
-                    <Nunito24Bold style={[{ color: clrStyle.main5 }, CustomStyleText]}>{title}</Nunito24Bold>
+                    <TitleFont style={[{ color: tileColor }, CustomStyleText]}>{title}</TitleFont>
                     : null}
                 <TextInput
                     placeholder={placeholder ? placeholder : 'Type here'}
                     value={value ? value.toString() : ''}
                     onChangeText={changFnc}
-                    placeholderTextColor={clrStyle.grey2}
+                    placeholderTextColor={clrStyle.grey30 as string}
                     secureTextEntry={hideContent ? hideContent : false}
                     keyboardType={isNumber ? 'numeric' : 'default'}
                     autoCapitalize={autoCap ? autoCap : 'sentences'}
-                    textContentType={contentType}
+                    textContentType={contentType as TextInputIOSProps['textContentType']}
                     maxLength={maxLength ? maxLength : undefined}
-                    style={[styles.w100, styles.border1, styles.textCenter, { borderColor: value ? clrStyle.main5 : clrStyle.grey2, padding: vw(2.5), fontFamily: value ? 'Nunito-Bold' : 'Nunito-Regular', fontSize: vw(4.5), borderRadius: vw(2), color: value ? clrStyle.main5 : clrStyle.grey2 }, CustomStyleInput]} />
+                    style={[styles.w100, styles.border1, styles.textCenter, { borderColor: value ? clrStyle.black : clrStyle.grey10, padding: vw(2.5), fontFamily: value ? 'NunitoBold' : 'NunitoRegular', fontSize: vw(4.5), borderRadius: vw(2), color: value ? clrStyle.black : clrStyle.grey10 }, CustomStyleInput]} />
                 {hideContentFnc ?
                     <TouchableOpacity
                         onPress={() => { hideContentFnc && hideContentFnc(!hideContent) }}
-                        style={[styles.padding2vw, styles.positionAbsolute, { bottom: -vw(12) }]}>
-                        <Nunito14Reg style={{ color: clrStyle.grey3 }}>{hideContent ? `Show ${contentType}` : `Hide ${contentType}`}</Nunito14Reg>
+                        style={[styles.padding2vw,]}>
+                        <CTEXT.Nunito14Reg style={{ color: clrStyle.grey30 }}>{hideContent ? `Show ${contentType}` : `Hide ${contentType}`}</CTEXT.Nunito14Reg>
                     </TouchableOpacity>
                     : null}
                 {subTitle ?
                     <View style={[styles.flexRowCenter]}>
-                        <Nunito16Reg style={[{ color: clrStyle.grey2 }]}>{subTitle}</Nunito16Reg>
-                        <TouchableOpacity onPress={supFnc}><Nunito16Reg style={[styles.textUnderline, { color: supFncTitleColor ? supFncTitleColor : clrStyle.grey3 }]}>{supFncTitle}</Nunito16Reg></TouchableOpacity>
+                        <CTEXT.Nunito16Reg style={[{ color: passiveColor }]}>{subTitle}</CTEXT.Nunito16Reg>
+                        <TouchableOpacity onPress={supFnc}><CTEXT.Nunito16Reg style={[styles.textUnderline, { color: supFncTitleColor ? supFncTitleColor : clrStyle.black }]}>{supFncTitle}</CTEXT.Nunito16Reg></TouchableOpacity>
                     </View>
                     : null
                 }
@@ -685,28 +548,32 @@ export class BoardingNavigation extends Component<{
     showGoBack: boolean,
     currentStep: number,
     dataLength: number,
+    activeColor?: string,
+    passiveColor?: string,
+    activeArrowColor?: string,
+    passiveArrowColor?: string,
 }> {
     render() {
-        const { fnc, leftTitle, rightTitle, showGoBack, currentStep, dataLength } = this.props;
+        const { fnc, leftTitle, rightTitle, showGoBack, currentStep, dataLength, activeColor, passiveColor, activeArrowColor, passiveArrowColor } = this.props;
 
         return (
             <View style={[styles.flexRowBetweenCenter, styles.marginTop2vw, styles.marginBottom8vw]}>
                 <TouchableOpacity
                     onPress={() => { fnc(false) }}>
-                    <View style={[styles.borderRadius100, styles.wfit, { padding: vw(2.5), backgroundColor: currentStep > 0 ? clrStyle.main6 : clrStyle.grey1 }]}>
+                    <View style={[styles.borderRadius100, styles.wfit, { padding: vw(2.5), backgroundColor: currentStep > 0 ? activeColor as string : passiveColor as string }]}>
                         {showGoBack ?
-                            <Nunito16Reg style={[styles.textUpperCase, styles.paddingH2vw, { color: clrStyle.grey3 }]}>{leftTitle}</Nunito16Reg>
+                            <CTEXT.Nunito16Reg style={[styles.textUpperCase, styles.paddingH2vw, { color: clrStyle.black }]}>{leftTitle}</CTEXT.Nunito16Reg>
                             :
-                            sharpLeftArrow(vw(6), vw(6), currentStep > 0 ? clrStyle.main5 : clrStyle.grey2)}
+                            SVG.sharpLeftArrow(vw(6), vw(6), currentStep > 0 ? activeArrowColor : passiveArrowColor)}
                     </View>
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => { fnc(true) }}>
-                    <View style={[styles.borderRadius100, styles.wfit, { padding: vw(2.5), backgroundColor: currentStep < dataLength - 1 ? clrStyle.main6 : clrStyle.main5 }]}>
+                    <View style={[styles.borderRadius100, styles.wfit, { padding: vw(2.5), backgroundColor: currentStep < dataLength - 1 ? activeColor as string : passiveArrowColor as string }]}>
                         {currentStep < dataLength - 1 ?
-                            sharpRightArrow(vw(6), vw(6), currentStep < dataLength - 1 ? clrStyle.main5 : clrStyle.grey2)
+                            SVG.sharpRightArrow(vw(6), vw(6), currentStep < dataLength - 1 ? activeArrowColor : passiveArrowColor)
                             :
-                            <Nunito16Bold style={[styles.textUpperCase, styles.paddingH2vw, { color: clrStyle.white }]}>{rightTitle}</Nunito16Bold>
+                            <CTEXT.Nunito16Bold style={[styles.textUpperCase, styles.paddingH2vw, { color: clrStyle.white }]}>{rightTitle}</CTEXT.Nunito16Bold>
                         }
                     </View>
                 </TouchableOpacity>
@@ -754,11 +621,11 @@ export class BoardingPicking extends Component<{
                                     }
                                 };
                             }}
-                            style={[styles.wfit, styles.paddingV2vw, styles.paddingH4vw, styles.border1, { borderColor: selected.includes(item) ? clrStyle.main5 : clrStyle.grey2, borderRadius: vw(2), }]}>
+                            style={[styles.wfit, styles.paddingV2vw, styles.paddingH4vw, styles.border1, { borderColor: selected.includes(item) ? clrStyle.black as string : clrStyle.white as string, borderRadius: vw(2), }]}>
                             {selected.includes(item) ?
-                                <Nunito14ExBold style={[{ color: clrStyle.main5 }]}>{item}</Nunito14ExBold>
+                                <CTEXT.Nunito14ExBold style={[{ color: clrStyle.black }]}>{item}</CTEXT.Nunito14ExBold>
                                 :
-                                <Nunito14Reg style={[{ color: clrStyle.grey3 }]}>{item}</Nunito14Reg>
+                                <CTEXT.Nunito14Reg style={[{ color: clrStyle.black }]}>{item}</CTEXT.Nunito14Reg>
                             }
                         </TouchableOpacity>
                     )
@@ -768,44 +635,50 @@ export class BoardingPicking extends Component<{
     }
 }
 
-export class TopNav extends Component<{
-    children?: React.ReactNode,
-    title?: string,
-    returnPreScreen?: boolean,
-    returnPreScreenFnc?: () => void,
-    rightIcon?: any,
-    rightFnc?: () => void,
-    hideChildren?: any,
+export class SectionTitleAndRightArrow extends Component<{
+    title: string,
+    titleFontClass?: ComponentType<{ children: React.ReactNode }>,
+    fnc: () => void,
+    disableArrow?: boolean,
+    titleColor?: string,
+    arrowColor?: string,
 }> {
     render() {
-        const { children, title, returnPreScreen, returnPreScreenFnc, rightIcon, rightFnc, hideChildren } = this.props;
+        const { title, fnc, titleColor, arrowColor, disableArrow } = this.props;
+        const TitleFontClass = this.props.titleFontClass ? this.props.titleFontClass : CTEXT.Inter16Bold;
         return (
-            <>
-                <Animated.View style={[styles.paddingH4vw, styles.paddingBottom4vw, styles.paddingTop2vw, styles.overflowHidden, { zIndex: 1, backgroundColor: clrStyle.main5, borderBottomLeftRadius: vw(6), borderBottomRightRadius: vw(6), }]}>
-                    <View style={[styles.paddingTop2vw, styles.w100, styles.flexRowBetweenCenter]}>
-                        {returnPreScreen ?
-                            <TouchableOpacity
-                                style={[styles.padding2vw]}
-                                onPress={returnPreScreenFnc}>
-                                {sharpLeftArrow(vw(6), vw(6), 'white')}
-                            </TouchableOpacity>
-                            : <View style={[{ width: vw(10), height: vw(10), }]} />
-                        }
-                        {title ? <Nunito20Bold style={[styles.textCenter, styles.alignSelfCenter, { color: 'white' }]}>{title}</Nunito20Bold> : null}
-                        {rightIcon ?
-                            <TouchableOpacity
-                                style={[styles.padding2vw]}
-                                onPress={rightFnc}>
-                                {rightIcon}
-                            </TouchableOpacity>
-                            : <View style={[{ width: vw(10), height: vw(10), }]} />
-                        }
-                    </View>
-                    <Animated.View style={{ height: hideChildren, opacity: hideChildren }}>
-                        {children}
-                    </Animated.View>
-                </Animated.View >
-            </>
+            <ViewRowBetweenCenter style={[styles.paddingH6vw, styles.paddingV2vw]}>
+                <TitleFontClass style={[{ color: titleColor ? titleColor : clrStyle.black }]}>{title}</TitleFontClass>
+                {disableArrow ?
+                    null :
+                    <TouchableOpacity onPress={fnc}>
+                        {SVG.sharpRightArrow(vw(6), vw(6), arrowColor ? arrowColor : clrStyle.black)}
+                    </TouchableOpacity>}
+            </ViewRowBetweenCenter>
         )
     }
 }
+
+export class TopNav3ItemWithTitle extends Component<{
+    title: string,
+    icon: any,
+    fnc: () => void,
+    customStyle?: any,
+    nav: any,
+}> {
+    render() {
+        const { title, icon, fnc, customStyle, nav } = this.props;
+        return (
+            <ViewRowBetweenCenter style={[styles.w100, styles.paddingH6vw]}>
+                <TouchableOpacity onPress={() => nav.goBack()}>
+                    {SVG.sharpLeftArrow(vw(6), vw(6), clrStyle.black)}
+                </TouchableOpacity>
+                <CTEXT.Inter20Bold style={[styles.paddingH2vw, styles.textCenter, { color: clrStyle.black }]}>{title}</CTEXT.Inter20Bold>
+                <TouchableOpacity onPress={fnc} style={[styles.padding2vw]}>
+                    {icon}
+                </TouchableOpacity>
+            </ViewRowBetweenCenter>
+        )
+    }
+}
+

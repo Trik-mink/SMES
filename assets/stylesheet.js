@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native';
-import { Dimensions } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
+
 export const vw = number => Dimensions.get('window').width * (number / 100);
 export const vh = number => Dimensions.get('window').height * (number / 100);
 export const vmin = number => Math.min(Dimensions.get('window').width * (number / 100), Dimensions.get('window').height * (number / 100));
@@ -28,6 +28,10 @@ const styles = StyleSheet.create({
 
     w90vw: {
         width: vw(90),
+    },
+
+    w84vw: {
+        width: vw(84),
     },
 
     w80: {
@@ -60,6 +64,10 @@ const styles = StyleSheet.create({
 
     w50vw: {
         width: vw(50),
+    },
+
+    w48: {
+        width: '48%',
     },
 
     w45: {
@@ -191,12 +199,20 @@ const styles = StyleSheet.create({
         height: vh(60),
     },
 
+    h60vw: {
+        height: vw(60),
+    },
+
     h50: {
         height: '50%',
     },
 
     h50vh: {
         height: vh(50),
+    },
+
+    h50vw: {
+        height: vw(50),
     },
 
     h45: {
@@ -249,6 +265,10 @@ const styles = StyleSheet.create({
 
     h15vw: {
         height: vw(15),
+    },
+
+    h15vh: {
+        height: vh(15),
     },
 
     h10: {
@@ -465,6 +485,10 @@ const styles = StyleSheet.create({
 
     marginVertical4vw: {
         marginVertical: vw(4),
+    },
+
+    marginVertical3vw: {
+        marginVertical: vw(3),
     },
 
     marginVertical2vw: {
@@ -1050,6 +1074,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 
+    flexColEndStart: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        alignItems: 'flex-start',
+    },
+
     alignContentSpaceBetween: {
         alignContent: 'space-between',
     },
@@ -1299,6 +1330,10 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
 
+    border2: {
+        borderWidth: 2,
+    },
+
     zIndex1: {
         zIndex: 1,
     },
@@ -1365,6 +1400,22 @@ const styles = StyleSheet.create({
         elevation: vw(3),
     },
 
+    shadowW0H0Black: {
+        shadowColor: 'black',
+        shadowOffset: { width: vw(0), height: vw(0) },
+        shadowOpacity: 0.2,
+        shadowRadius: vw(1),
+        elevation: vw(1),
+    },
+
+    shadowW1H1p5Black: {
+        shadowColor: 'black',
+        shadowOffset: { width: vw(1), height: vw(1.5) },
+        shadowOpacity: 0.2,
+        shadowRadius: vw(2),
+        elevation: vw(2),
+    },
+
     bgcolorBlack: {
         backgroundColor: 'black',
     },
@@ -1383,6 +1434,22 @@ const styles = StyleSheet.create({
 
     bgcolorBlack50: {
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+
+    bgcolorBlack40: {
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    },
+
+    bgcolorBlack30: {
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+
+    bgcolorBlack20: {
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    },
+
+    bgcolorBlack10: {
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
     },
 });
 
